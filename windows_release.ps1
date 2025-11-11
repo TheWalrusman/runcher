@@ -3,7 +3,7 @@ Set-Variable -Name "RUNCHER_PATH" -Value ((Get-Location).path)
 Set-Variable -Name "RUNCHER_VERSION" -Value (Select-String -Path Cargo.toml -Pattern '^version = \"(.*)\"$').Matches.Groups[1].value
 
 # Build the tools.
-cargo build --release
+cargo build --release #--target x86_64-pc-windows-msvc
 
 # Prepare the paths for the deployment.
 Set-Location E:\
@@ -109,8 +109,8 @@ Copy-Item $RUNCHER_PATH/locale/* E:\deploy\runcher-release-assets\locale\
 Copy-Item $RUNCHER_PATH/ui_templates/* E:\deploy\runcher-release-assets\ui\
 
 # Execute windeployqt to add missing translations and the vcredist if needed.
+#windeployqt --list mapping --release runcher.exe
 windeployqt runcher.exe
-
 # Remove extra files that are not really needed for execution.
 Remove-Item -fo E:\deploy\runcher-release-assets\vc_redist.x64.exe
 Remove-Item -fo E:\deploy\runcher-release-assets\icons\breeze-icons.rcc

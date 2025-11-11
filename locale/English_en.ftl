@@ -130,6 +130,7 @@ mod_secondary_older_than_content = <li>
     </li>
 
 unit_multiplier = Unit Multiplier
+unit_multiplier_factions = Unit Multiplier Factions
 
 update_schema_checker = Update Schema Checker
 update_no_local_schema = <p>No local schemas found. Do you want to download the latest ones?</p><p><b>NOTE:</b> Schemas are needed for certain advanced features.</p>

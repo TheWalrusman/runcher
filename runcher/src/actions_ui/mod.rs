@@ -15,6 +15,8 @@ use qt_widgets::QComboBox;
 use qt_widgets::QDoubleSpinBox;
 use qt_widgets::QGridLayout;
 use qt_widgets::QLabel;
+use qt_widgets::QListWidget;
+use qt_widgets::QListWidgetItem;
 use qt_widgets::QMenu;
 use qt_widgets::QSpinBox;
 use qt_widgets::{QToolButton, q_tool_button::ToolButtonPopupMode};
@@ -29,6 +31,7 @@ use qt_core::QPtr;
 use qt_core::QString;
 use qt_core::SlotOfBool;
 use qt_core::SlotOfInt;
+use qt_core::CheckState;
 
 use anyhow::Result;
 use getset::*;
@@ -60,6 +63,7 @@ pub struct ActionsUI {
     enable_translations_combobox: QBox<QComboBox>,
     merge_all_mods_checkbox: QBox<QCheckBox>,
     unit_multiplier_spinbox: QBox<QDoubleSpinBox>,
+    unit_multiplier_factions_listwidget: QBox<QListWidget>,
     universal_rebalancer_combobox: QBox<QComboBox>,
     enable_dev_only_ui_checkbox: QBox<QCheckBox>,
     scripts_container: QBox<QWidget>,
@@ -313,13 +317,14 @@ impl ActionsUI {
         let enable_translations_icon = QIcon::from_theme_1a(&QString::from_std_str("language-chooser"));
         let merge_all_mods_icon = QIcon::from_theme_1a(&QString::from_std_str("merge"));
         let unit_multiplier_icon = QIcon::from_theme_1a(&QString::from_std_str("view-time-schedule-calculus"));
+        let unit_multiplier_factions_icon = QIcon::from_theme_1a(&QString::from_std_str("games-config-board"));
         let universal_rebalancer_icon = QIcon::from_theme_1a(&QString::from_std_str("autocorrection"));
         let enable_dev_only_ui_icon = QIcon::from_theme_1a(&QString::from_std_str("verb"));
 
         let menu = self.play_button().menu();
         for index in 0..menu.actions().count_0a() {
 
-            if index < 8 {
+            if index < 9 {
                 let action = menu.actions().value_1a(index);
                 let widget_action = action.static_downcast::<QWidgetAction>();
                 let widget = widget_action.default_widget();
@@ -335,8 +340,9 @@ impl ActionsUI {
                     4 => label.set_pixmap(&enable_translations_icon.pixmap_2_int(22, 22)),
                     5 => label.set_pixmap(&merge_all_mods_icon.pixmap_2_int(22, 22)),
                     6 => label.set_pixmap(&unit_multiplier_icon.pixmap_2_int(22, 22)),
-                    7 => label.set_pixmap(&universal_rebalancer_icon.pixmap_2_int(22, 22)),
-                    8 => label.set_pixmap(&enable_dev_only_ui_icon.pixmap_2_int(22, 22)),
+                    7 => label.set_pixmap(&unit_multiplier_factions_icon.pixmap_2_int(22, 22)),
+                    8 => label.set_pixmap(&universal_rebalancer_icon.pixmap_2_int(22, 22)),
+                    9 => label.set_pixmap(&enable_dev_only_ui_icon.pixmap_2_int(22, 22)),
                     _ => {}
                 }
             }
@@ -364,6 +370,14 @@ impl ActionsUI {
         combobox
     }
 
+    pub unsafe fn new_launch_option_listwidget(menu: &QBox<QMenu>, text_key: &str, icon_key: &str) -> QBox<QListWidget> {
+        let widget = QWidget::new_1a(menu);
+        let listwidget = QListWidget::new_1a(&widget);
+        listwidget.set_maximum_height(150);
+        Self::new_launch_option(menu, text_key, icon_key, &widget, &listwidget.static_upcast());
+        listwidget
+    }
+
     pub unsafe fn new(parent: &QBox<QWidget>) -> Result<Rc<Self>> {
         let layout: QPtr<QGridLayout> = parent.layout().static_downcast();
 
@@ -380,11 +394,21 @@ impl ActionsUI {
         let enable_translations_combobox = Self::new_launch_option_combobox(&play_menu, "enable_translations", "language-chooser");
         let merge_all_mods_checkbox = Self::new_launch_option_checkbox(&play_menu, "merge_all_mods", "merge");
         let unit_multiplier_spinbox = Self::new_launch_option_doublespinbox(&play_menu, "unit_multiplier", "view-time-schedule-calculus");
+        let unit_multiplier_factions_listwidget = Self::new_launch_option_listwidget(&play_menu, "unit_multiplier_factions", "games-config-board");
         let universal_rebalancer_combobox = Self::new_launch_option_combobox(&play_menu, "universal_rebalancer", "view-time-schedule-calculus");
         let enable_dev_only_ui_checkbox = Self::new_launch_option_checkbox(&play_menu, "enable_dev_only_ui", "verb");
         enable_translations_combobox.set_current_index(0);
         unit_multiplier_spinbox.set_value(1.00);
         universal_rebalancer_combobox.set_current_index(0);
+
+        // Populate the faction list for unit multiplier
+        const ALL_FACTIONS: [&str; 23] = ["_brt_", "_bst_", "_chs_", "_cst_", "_cth_", "_dae_", "_def_", "_dwf_", "_emp_", "_grn_", "_hef_", "_kho_", "_ksl_", "_lzd_", "_nor_", "_nur_", "_ogr_", "_skv_", "_sla_", "_tmb_", "_tze_", "_vmp_", "_wef_"];
+        for faction in &ALL_FACTIONS {
+            let item = QListWidgetItem::new();
+            item.set_text(&QString::from_std_str(*faction));
+            item.set_check_state(CheckState::Unchecked);
+            unit_multiplier_factions_listwidget.add_item_q_list_widget_item(item.into_ptr());
+        }
 
         let scripts_action = QWidgetAction::new(&play_menu);
         let scripts_container = QWidget::new_1a(&play_menu);
@@ -448,6 +472,7 @@ impl ActionsUI {
             enable_translations_combobox,
             merge_all_mods_checkbox,
             unit_multiplier_spinbox,
+            unit_multiplier_factions_listwidget,
             universal_rebalancer_combobox,
             //universal_balancer_ignored: QToolButton::new_0a();
             enable_dev_only_ui_checkbox,
